@@ -138,8 +138,7 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
                         namespacesList.toArray(EMPTY),
                         cluster);
             }
-        } catch (Exception ignore) {
-            System.out.println("ignore = " + ignore);
+        } catch (ExecutionException ignore) {
         }
         if (!newKubernetesConfig.equals(kubernetesConfig)) {
             KubernetesConfig oldKubernetesConfig = kubernetesConfig;
