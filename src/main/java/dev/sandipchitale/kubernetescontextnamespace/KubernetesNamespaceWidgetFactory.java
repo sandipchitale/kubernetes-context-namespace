@@ -36,15 +36,14 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
 
         private final KubernetesContextNamespaceService kubernetesContextNamespaceService;
         private final PropertyChangeListener propertyChangeListener;
-        private String namespace = KubernetesContextNamespaceService.UNKNOWN;
+        private KubernetesContextNamespaceService.KubernetesConfig kubernetesConfig = null;
 
         KubernetesNamespaceWidget(Project project) {
             kubernetesContextNamespaceService = ApplicationManager.getApplication().getService(KubernetesContextNamespaceService.class);
-            StatusBar statusBar = WindowManager.getInstance().getStatusBar(project);
+            kubernetesConfig = kubernetesContextNamespaceService.getKubernetesConfig();
             propertyChangeListener = (PropertyChangeEvent propertyChangeEvent) -> {
-                KubernetesContextNamespaceService.KubernetesConfig kubernetesConfig = (KubernetesContextNamespaceService.KubernetesConfig) propertyChangeEvent.getNewValue();
-                namespace = kubernetesConfig.namespace();
-                statusBar.updateWidget(ID);
+                kubernetesConfig = (KubernetesContextNamespaceService.KubernetesConfig) propertyChangeEvent.getNewValue();
+                WindowManager.getInstance().getStatusBar(project).updateWidget(ID);
             };
             kubernetesContextNamespaceService.addPropertyChangeListener(propertyChangeListener);
         }
@@ -72,12 +71,12 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
 
         @Override
         public @NotNull String getText() {
-            return namespace;
+            return kubernetesConfig.namespace();
         }
 
         @Override
         public @NotNull String getTooltipText() {
-            return String.format("Current namespace %s", namespace);
+            return String.format("Current namespace %s", getText());
         }
     }
 }

@@ -1,15 +1,24 @@
 package dev.sandipchitale.kubernetescontextnamespace;
 
+import com.intellij.ide.DataManager;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.StatusBarWidgetFactory;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.util.Consumer;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -36,15 +45,14 @@ public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
 
         private final KubernetesContextNamespaceService kubernetesContextNamespaceService;
         private final PropertyChangeListener propertyChangeListener;
-        private String context = KubernetesContextNamespaceService.UNKNOWN;
+        private KubernetesContextNamespaceService.KubernetesConfig kubernetesConfig = null;
 
         KubernetesContextWidget(Project project) {
             kubernetesContextNamespaceService = ApplicationManager.getApplication().getService(KubernetesContextNamespaceService.class);
+            kubernetesConfig = kubernetesContextNamespaceService.getKubernetesConfig();
             propertyChangeListener = (PropertyChangeEvent propertyChangeEvent) -> {
-                KubernetesContextNamespaceService.KubernetesConfig kubernetesConfig = (KubernetesContextNamespaceService.KubernetesConfig) propertyChangeEvent.getNewValue();
-                context = kubernetesConfig.currentContext();
-                StatusBar statusBar = WindowManager.getInstance().getStatusBar(project);
-                statusBar.updateWidget(ID);
+                kubernetesConfig = (KubernetesContextNamespaceService.KubernetesConfig) propertyChangeEvent.getNewValue();
+                WindowManager.getInstance().getStatusBar(project).updateWidget(ID);
             };
             kubernetesContextNamespaceService.addPropertyChangeListener(propertyChangeListener);
         }
@@ -60,6 +68,36 @@ public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
         }
 
         @Override
+        public @Nullable Consumer<MouseEvent> getClickConsumer() {
+            return mouseEvent -> {
+                // Create popup actions
+                AnAction context1 = new AnAction("Context 1") {
+                    @Override
+                    public void actionPerformed(@NotNull AnActionEvent e) {
+                        // Perform action 1
+                    }
+                };
+                AnAction context2 = new AnAction("Context 2") {
+                    @Override
+                    public void actionPerformed(@NotNull AnActionEvent e) {
+                        // Perform action 2
+                    }
+                };
+
+                // Create the popup
+                ListPopup popup = JBPopupFactory.getInstance()
+                        .createActionGroupPopup("Kubernetes Contexts",
+                                new DefaultActionGroup(context1, context2),
+                                DataManager.getInstance().getDataContext(mouseEvent.getComponent()),
+                                JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
+                                true);
+
+                // Show the popup
+                popup.showInBestPositionFor(DataManager.getInstance().getDataContext(mouseEvent.getComponent()));
+            };
+        }
+
+        @Override
         public void dispose() {
             kubernetesContextNamespaceService.removePropertyChangeListener(propertyChangeListener);
             StatusBarWidget.super.dispose();
@@ -72,12 +110,12 @@ public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
 
         @Override
         public @NotNull String getText() {
-            return context;
+            return kubernetesConfig.currentContext();
         }
 
         @Override
         public @NotNull String getTooltipText() {
-            return String.format("Current context %s", context);
+            return String.format("Current context %s", getText());
         }
     }
 }
