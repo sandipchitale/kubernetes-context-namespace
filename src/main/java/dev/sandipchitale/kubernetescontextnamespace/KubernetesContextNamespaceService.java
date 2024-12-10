@@ -17,6 +17,8 @@ public interface KubernetesContextNamespaceService {
                                           String cluster) {
     }
 
+    void refreshNow();
+
     KubernetesConfig getKubernetesConfig();
 
     void addPropertyChangeListener(PropertyChangeListener propertyChangeListener);

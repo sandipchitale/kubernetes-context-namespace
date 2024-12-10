@@ -72,9 +72,16 @@ public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
         @Override
         public @NotNull Consumer<MouseEvent> getClickConsumer() {
             return mouseEvent -> {
+                if (kubernetesConfig == null) {
+                    return;
+                }
                 String[] contexts = kubernetesConfig.contexts();
                 java.util.List<AnAction> actions = new LinkedList<>();
                 for (String context : contexts) {
+                    if (context.equals(kubernetesConfig.currentContext())) {
+                        // Skip current
+                        continue;
+                    }
                     // Create popup actions
                     actions.add(new AnAction(context) {
                         @Override
@@ -83,6 +90,7 @@ public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
                                 try {
                                     // Switch the context
                                     ScriptRunnerUtil.getProcessOutput(new GeneralCommandLine("kubectl", "config", "use-context", context));
+                                    kubernetesContextNamespaceService.refreshNow();
                                 } catch (ExecutionException ignore) {
                                 }
                             }).start();
@@ -116,12 +124,15 @@ public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
 
         @Override
         public @NotNull String getText() {
+            if (kubernetesConfig == null) {
+                return KubernetesContextNamespaceService.UNKNOWN;
+            }
             return kubernetesConfig.currentContext();
         }
 
         @Override
         public @NotNull String getTooltipText() {
-            return String.format("Current context %s", getText());
+            return String.format("<html>Kubernetes context: %s<br/>KUBECONFIG: %s", getText(), kubernetesConfig == null ? KubernetesContextNamespaceService.UNKNOWN : kubernetesConfig.KUBECONFIG());
         }
     }
 }

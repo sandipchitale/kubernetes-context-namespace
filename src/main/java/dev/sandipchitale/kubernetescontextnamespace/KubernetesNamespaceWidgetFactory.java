@@ -35,7 +35,7 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
 
     @Override
     public @NotNull @NlsContexts.ConfigurableName String getDisplayName() {
-        return "Kubernetes Context";
+        return "Kubernetes Namespace";
     }
 
     @Override
@@ -72,9 +72,16 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
         @Override
         public @NotNull Consumer<MouseEvent> getClickConsumer() {
             return mouseEvent -> {
+                if (kubernetesConfig == null) {
+                    return;
+                }
                 String[] namespaces = kubernetesConfig.namespaces();
                 java.util.List<AnAction> actions = new LinkedList<>();
                 for (String namespace : namespaces) {
+                    if (namespace.equals(kubernetesConfig.namespace())) {
+                        // Skip current
+                        continue;
+                    }
                     // Create popup actions
                     actions.add(new AnAction(namespace) {
                         @Override
@@ -82,7 +89,8 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
                             new Thread(() -> {
                                 try {
                                     // Switch namespace
-                                    ScriptRunnerUtil.getProcessOutput(new GeneralCommandLine("kubectl", "config","set-context", "--current", "--namespace=" + namespace));
+                                    ScriptRunnerUtil.getProcessOutput(new GeneralCommandLine("kubectl", "config", "set-context", "--current", "--namespace=" + namespace));
+                                    kubernetesContextNamespaceService.refreshNow();
                                 } catch (ExecutionException ignore) {
                                 }
                             }).start();
@@ -116,12 +124,15 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
 
         @Override
         public @NotNull String getText() {
+            if (kubernetesConfig == null) {
+                return KubernetesContextNamespaceService.UNKNOWN;
+            }
             return kubernetesConfig.namespace();
         }
 
         @Override
         public @NotNull String getTooltipText() {
-            return String.format("Current namespace %s", getText());
+            return String.format("<html>Kubernetes namespace: %s<br/>KUBECONFIG: %s", getText(), kubernetesConfig == null ? KubernetesContextNamespaceService.UNKNOWN : kubernetesConfig.KUBECONFIG());
         }
     }
 }
