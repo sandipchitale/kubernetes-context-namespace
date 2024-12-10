@@ -11,9 +11,12 @@ public interface KubernetesContextNamespaceService {
                                           String KUBECONFIG,
                                           String currentContext,
                                           String namespace,
-                                          String cluster){};
+                                          String cluster) {
+    }
 
     KubernetesConfig getKubernetesConfig();
+
     void addPropertyChangeListener(PropertyChangeListener propertyChangeListener);
+
     void removePropertyChangeListener(PropertyChangeListener propertyChangeListener);
 }
