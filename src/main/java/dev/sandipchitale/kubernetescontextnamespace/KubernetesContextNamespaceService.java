@@ -4,13 +4,16 @@ import java.beans.PropertyChangeListener;
 
 public interface KubernetesContextNamespaceService {
     String UNKNOWN = "UNKNOWN";
+    String[] EMPTY = new String[0];
 
     String KUBERNETES_CONFIG_PROPERTY_NAME = "KubernetesConfig";
 
     public static record KubernetesConfig(boolean connected,
                                           String KUBECONFIG,
                                           String currentContext,
+                                          String[] contexts,
                                           String namespace,
+                                          String[] namespaces,
                                           String cluster) {
     }
 

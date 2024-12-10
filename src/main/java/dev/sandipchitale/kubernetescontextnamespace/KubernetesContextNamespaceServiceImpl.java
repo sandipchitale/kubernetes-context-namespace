@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.LinkedList;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,11 +21,6 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
     private final GeneralCommandLine kubectlConfigList = new GeneralCommandLine("kubectl", "config", "view", "-o=json", "-v", "9");
     private final Pattern KUBECONFIG_PATTERN = Pattern.compile(".+Config loaded from file:\\s+(.+)\n");
     private final Gson gson = new Gson();
-
-    private String KUBECONFIG;
-    private String context = UNKNOWN;
-    private String cluster = UNKNOWN;
-    private String namespace = UNKNOWN;
 
     private KubernetesContextNamespaceService.KubernetesConfig kubernetesConfig;
 
@@ -36,14 +32,17 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
         TimerTask kubectlConfigListTask = new TimerTask() {
             @Override
             public void run() {
-                KUBECONFIG = UNKNOWN;
-                context = UNKNOWN;
-                cluster = UNKNOWN;
-                namespace = UNKNOWN;
+                String KUBECONFIG = UNKNOWN;
+                String context = UNKNOWN;
+                String cluster = UNKNOWN;
+                String namespace = UNKNOWN;
+
                 KubernetesConfig newKubernetesConfig = new KubernetesConfig(false,
                         KUBECONFIG,
                         context,
+                        EMPTY,
                         namespace,
+                        EMPTY,
                         cluster);
                 try {
                     OSProcessHandler handler = new OSProcessHandler(kubectlConfigList);
@@ -82,11 +81,14 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
                         JsonPrimitive contextNamePrimitive = config.getAsJsonPrimitive("current-context");
                         String currentContext = contextNamePrimitive.getAsString();
                         JsonObject currentContextObject = null;
+                        java.util.List<String> contextsList = new LinkedList<>();
                         for (int i = 0; i < contexts.size(); i++) {
                             JsonElement jsonElement = contexts.get(i);
                             if (jsonElement.isJsonObject()) {
                                 JsonObject contextObject = (JsonObject) jsonElement;
-                                if (currentContext.equals(contextObject.getAsJsonPrimitive("name").getAsString())) {
+                                String contextName = contextObject.getAsJsonPrimitive("name").getAsString();
+                                contextsList.add(contextName);
+                                if (currentContext.equals(contextName)) {
                                     currentContextObject = contextObject.getAsJsonObject("context");
                                     break;
                                 }
@@ -101,11 +103,12 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
                         newKubernetesConfig = new KubernetesConfig(true,
                                 KUBECONFIG,
                                 context,
+                                contextsList.toArray(new String[0]),
                                 namespace,
+                                EMPTY,
                                 cluster);
                     }
-                } catch (Exception ex) {
-                    System.out.println("ex = " + ex);
+                } catch (Exception ignore) {
                 }
                 if (!newKubernetesConfig.equals(kubernetesConfig)) {
                     KubernetesConfig oldKubernetesConfig = kubernetesConfig;

@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.LinkedList;
 
 public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
 
@@ -69,24 +70,22 @@ public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
         @Override
         public @Nullable Consumer<MouseEvent> getClickConsumer() {
             return mouseEvent -> {
-                // Create popup actions
-                AnAction context1 = new AnAction("Context 1") {
-                    @Override
-                    public void actionPerformed(@NotNull AnActionEvent e) {
-                        // Perform action 1
-                    }
-                };
-                AnAction context2 = new AnAction("Context 2") {
-                    @Override
-                    public void actionPerformed(@NotNull AnActionEvent e) {
-                        // Perform action 2
-                    }
-                };
+                String[] contexts = kubernetesConfig.contexts();
+                java.util.List<AnAction> actions = new LinkedList<>();
+                for (String context : contexts) {
+                    // Create popup actions
+                    actions.add(new AnAction(context) {
+                        @Override
+                        public void actionPerformed(@NotNull AnActionEvent e) {
+                            // Switch the context
+                        }
+                    });
+                }
 
                 // Create the popup
                 ListPopup popup = JBPopupFactory.getInstance()
                         .createActionGroupPopup("Kubernetes Contexts",
-                                new DefaultActionGroup(context1, context2),
+                                new DefaultActionGroup(actions),
                                 DataManager.getInstance().getDataContext(mouseEvent.getComponent()),
                                 JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
                                 true);
