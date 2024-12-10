@@ -15,7 +15,6 @@ import com.intellij.openapi.wm.WindowManager;
 import com.intellij.util.Consumer;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
@@ -68,7 +67,7 @@ public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
         }
 
         @Override
-        public @Nullable Consumer<MouseEvent> getClickConsumer() {
+        public @NotNull Consumer<MouseEvent> getClickConsumer() {
             return mouseEvent -> {
                 String[] contexts = kubernetesConfig.contexts();
                 java.util.List<AnAction> actions = new LinkedList<>();

@@ -1,16 +1,15 @@
 package dev.sandipchitale.kubernetescontextnamespace;
 
 import com.google.gson.*;
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.process.OSProcessHandler;
-import com.intellij.execution.process.ProcessAdapter;
-import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.process.ProcessOutputTypes;
+import com.intellij.execution.process.*;
 import com.intellij.openapi.util.Key;
 import org.jetbrains.annotations.NotNull;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
@@ -100,12 +99,24 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
                             namespace = currentContextObject.getAsJsonPrimitive("namespace").getAsString();
                         }
 
+                        java.util.List<String> namespacesList = new LinkedList<>();
+
+
+                        try {
+                            String namespacesOutput = ScriptRunnerUtil.getProcessOutput(
+                                    new GeneralCommandLine("kubectl", "get", "namespaces", "--no-headers", "-o", "custom-columns=NAME:.metadata.name"));
+                            namespacesList.addAll(Arrays.asList(namespacesOutput.split("\n")));
+                        } catch (ExecutionException ignore) {
+                            // Ignored
+                        }
+
+
                         newKubernetesConfig = new KubernetesConfig(true,
                                 KUBECONFIG,
                                 context,
-                                contextsList.toArray(new String[0]),
+                                contextsList.toArray(EMPTY),
                                 namespace,
-                                EMPTY,
+                                namespacesList.toArray(EMPTY),
                                 cluster);
                     }
                 } catch (Exception ignore) {
