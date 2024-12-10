@@ -1,5 +1,8 @@
 package dev.sandipchitale.kubernetescontextnamespace;
 
+import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -76,7 +79,13 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
                     actions.add(new AnAction(namespace) {
                         @Override
                         public void actionPerformed(@NotNull AnActionEvent e) {
-                            // Switch the namespace
+                            new Thread(() -> {
+                                try {
+                                    // Switch namespace
+                                    ScriptRunnerUtil.getProcessOutput(new GeneralCommandLine("kubectl", "config","set-context", "--current", "--namespace=" + namespace));
+                                } catch (ExecutionException ignore) {
+                                }
+                            }).start();
                         }
                     });
                 }

@@ -89,7 +89,6 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
                                 contextsList.add(contextName);
                                 if (currentContext.equals(contextName)) {
                                     currentContextObject = contextObject.getAsJsonObject("context");
-                                    break;
                                 }
                             }
                         }
@@ -101,7 +100,6 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
 
                         java.util.List<String> namespacesList = new LinkedList<>();
 
-
                         try {
                             String namespacesOutput = ScriptRunnerUtil.getProcessOutput(
                                     new GeneralCommandLine("kubectl", "get", "namespaces", "--no-headers", "-o", "custom-columns=NAME:.metadata.name"));
@@ -109,7 +107,6 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
                         } catch (ExecutionException ignore) {
                             // Ignored
                         }
-
 
                         newKubernetesConfig = new KubernetesConfig(true,
                                 KUBECONFIG,

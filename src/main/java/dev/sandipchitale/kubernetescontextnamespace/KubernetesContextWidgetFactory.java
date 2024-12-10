@@ -1,5 +1,8 @@
 package dev.sandipchitale.kubernetescontextnamespace;
 
+import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -76,7 +79,13 @@ public class KubernetesContextWidgetFactory implements StatusBarWidgetFactory {
                     actions.add(new AnAction(context) {
                         @Override
                         public void actionPerformed(@NotNull AnActionEvent e) {
-                            // Switch the context
+                            new Thread(() -> {
+                                try {
+                                    // Switch the context
+                                    ScriptRunnerUtil.getProcessOutput(new GeneralCommandLine("kubectl", "config", "use-context", context));
+                                } catch (ExecutionException ignore) {
+                                }
+                            }).start();
                         }
                     });
                 }
