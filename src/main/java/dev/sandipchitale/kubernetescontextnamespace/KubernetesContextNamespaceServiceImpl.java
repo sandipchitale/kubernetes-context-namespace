@@ -125,7 +125,12 @@ public class KubernetesContextNamespaceServiceImpl implements KubernetesContextN
                 try {
                     String namespacesOutput = ScriptRunnerUtil.getProcessOutput(
                             new GeneralCommandLine("kubectl", "get", "namespaces", "--no-headers", "-o", "custom-columns=NAME:.metadata.name"));
-                    namespacesList.addAll(Arrays.asList(namespacesOutput.split("\n")));
+                    namespacesList.addAll(
+                            Arrays
+                                    .stream(namespacesOutput.split("\n")).filter(s -> {
+                                        return !s.isEmpty();
+                                    })
+                                    .toList());
                 } catch (ExecutionException ignore) {
                     // Ignored
                 }

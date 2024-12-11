@@ -71,11 +71,14 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
 
         @Override
         public @NotNull Consumer<MouseEvent> getClickConsumer() {
-            return mouseEvent -> {
+            return (MouseEvent mouseEvent) -> {
                 if (kubernetesConfig == null) {
                     return;
                 }
                 String[] namespaces = kubernetesConfig.namespaces();
+                if (namespaces.length == 0) {
+                    return;
+                }
                 java.util.List<AnAction> actions = new LinkedList<>();
                 for (String namespace : namespaces) {
                     if (namespace.equals(kubernetesConfig.namespace())) {
@@ -96,6 +99,10 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
                             }).start();
                         }
                     });
+                }
+
+                if (actions.isEmpty()) {
+                    return;
                 }
 
                 // Create the popup
@@ -132,7 +139,10 @@ public class KubernetesNamespaceWidgetFactory implements StatusBarWidgetFactory 
 
         @Override
         public @NotNull String getTooltipText() {
-            return String.format("<html>Kubernetes namespace: %s<br/>KUBECONFIG: %s", getText(), kubernetesConfig == null ? KubernetesContextNamespaceService.UNKNOWN : kubernetesConfig.KUBECONFIG());
+            return String.format("<html>Kubernetes namespace: %s<br/>Kubernetes cluster: %s<br/>KUBECONFIG: %s",
+                    getText(),
+                    kubernetesConfig == null ? KubernetesContextNamespaceService.UNKNOWN : kubernetesConfig.cluster(),
+                    kubernetesConfig == null ? KubernetesContextNamespaceService.UNKNOWN : kubernetesConfig.KUBECONFIG());
         }
     }
 }
